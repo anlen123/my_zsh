@@ -9,7 +9,7 @@ fi
 # export PATH=$HOME/bin:/usr/local/bin:$PATH
 
 # Path to your oh-my-zsh installation.
-export ZSH="/root/.oh-my-zsh"
+export ZSH="$HOME/.oh-my-zsh"
 
 # Set name of the theme to load --- if set to "random", it will
 # load a random theme each time oh-my-zsh is loaded, in which case,
@@ -80,7 +80,7 @@ ZSH_THEME="powerlevel10k/powerlevel10k"
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
 #plugins=(git extract zsh-syntax-highlighting z)
-plugins=(git zsh-autosuggestions extract zsh-syntax-highlighting z ) 
+plugins=(git zsh-autosuggestions extract zsh-syntax-highlighting z vi-mode) 
 
 source $ZSH/oh-my-zsh.sh
 
@@ -113,7 +113,7 @@ source $ZSH/oh-my-zsh.sh
 export PATH="$HOME/.yarn/bin:$HOME/.config/yarn/global/node_modules/.bin:$PATH"
 #source ~/.oh-my-zsh/plugins/incr/incr*.zsh
 alias cls="clear"
-alias vim='nvim'
+alias vim="nvim"
 alias tmuxn='tmux new -s '
 alias tmuxd='tmux kill-pane -t '
 alias tmuxj='tmux a -t '
@@ -122,6 +122,7 @@ alias setproxy='export ALL_PROXY=http://127.0.0.1:1081'
 alias unsetproxy='unset ALL_PROXY'
 alias ssr='shadowsocksr-cli'
 alias qip='v2 curl cip.cc'
+alias ra='ranger'
 # 0 . Enter
 bindkey -s "^[Op" "0"
 bindkey -s "^[On" "."
@@ -144,23 +145,64 @@ bindkey -s "^[Om" "-"
 bindkey -s "^[Oj" "*"
 bindkey -s "^[Oo" "/"
 
-## >>> conda initialize >>>
-## !! Contents within this block are managed by 'conda init' !!
-#__conda_setup="$('/root/miniconda3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
+
+
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
+[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+# >>> conda initialize >>>
+# !! Contents within this block are managed by 'conda init' !!
+#__conda_setup="$('$HOME/miniconda3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
 #if [ $? -eq 0 ]; then
     #eval "$__conda_setup"
 #else
-    #if [ -f "/root/miniconda3/etc/profile.d/conda.sh" ]; then
-        #. "/root/miniconda3/etc/profile.d/conda.sh"
+    #if [ -f "$HOME/miniconda3/etc/profile.d/conda.sh" ]; then
+        #. "$HOME/miniconda3/etc/profile.d/conda.sh"
     #else
-        #export PATH="/root/miniconda3/bin:$PATH"
+        #export PATH="$HOME/miniconda3/bin:$PATH"
     #fi
 #fi
 #unset __conda_setup
 ## <<< conda initialize <<<
 
+###-begin-pm2-completion-###
+### credits to npm for the completion file model
+#
+# Installation: pm2 completion >> ~/.bashrc  (or ~/.zshrc)
+#
 
-#[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+COMP_WORDBREAKS=${COMP_WORDBREAKS/=/}
+COMP_WORDBREAKS=${COMP_WORDBREAKS/@/}
+export COMP_WORDBREAKS
 
-# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
-[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+if type complete &>/dev/null; then
+  _pm2_completion () {
+    local si="$IFS"
+    IFS=$'\n' COMPREPLY=($(COMP_CWORD="$COMP_CWORD" \
+                           COMP_LINE="$COMP_LINE" \
+                           COMP_POINT="$COMP_POINT" \
+                           pm2 completion -- "${COMP_WORDS[@]}" \
+                           2>/dev/null)) || return $?
+    IFS="$si"
+  }
+  complete -o default -F _pm2_completion pm2
+elif type compctl &>/dev/null; then
+  _pm2_completion () {
+    local cword line point words si
+    read -Ac words
+    read -cn cword
+    let cword-=1
+    read -l line
+    read -ln point
+    si="$IFS"
+    IFS=$'\n' reply=($(COMP_CWORD="$cword" \
+                       COMP_LINE="$line" \
+                       COMP_POINT="$point" \
+                       pm2 completion -- "${words[@]}" \
+                       2>/dev/null)) || return $?
+    IFS="$si"
+  }
+  compctl -K _pm2_completion + -f + pm2
+fi
+###-end-pm2-completion-###
